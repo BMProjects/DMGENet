@@ -42,9 +42,9 @@ class gated_TCN(nn.Module):
         B, N, t, d = x.shape
         x = x.reshape(B * N, t, d)
         x = x.transpose(1, 2)
-        TCN1_output = F.tanh(self.TCN1(x))
+        TCN1_output = torch.tanh(self.TCN1(x))
         TCN1_output = TCN1_output.transpose(1, 2).reshape(B, N, t, self.num_channels[-1])
-        TCN2_output = F.sigmoid(self.TCN2(x))
+        TCN2_output = torch.sigmoid(self.TCN2(x))
         TCN2_output = TCN2_output.transpose(1, 2).reshape(B, N, t, self.num_channels[-1])
         output = (TCN1_output * TCN2_output).transpose(1, 2)
         return output
@@ -98,7 +98,7 @@ class SpatioTemporal_block(nn.Module):
         # 空间模块
         self.spital_block = SpitalBlock(hidden_size, hidden_size, adj, dropout, alpha, n_heads, gcn_bool, gat_bool)
         # 时空异质性建模
-        self.node_embedding = nn.Parameter(torch.randn(num_nodes, apt_size).cuda(), requires_grad=True).cuda()
+        self.node_embedding = nn.Parameter(torch.randn(num_nodes, apt_size), requires_grad=True)
         self.ComputeAttentionScore = ComputeAttentionScore()
         self.w_s = (nn.Conv2d(in_channels=apt_size, out_channels=hidden_size, kernel_size=(1, 1)))
         self.w_t = (nn.Conv2d(in_channels=apt_size, out_channels=hidden_size, kernel_size=(1, 1)))
@@ -117,11 +117,11 @@ class SpatioTemporal_block(nn.Module):
         x_s = self.spital_block(x_t)
         if self.ASTAM_bool:
             # 计算时间维度的注意力分数，ComputeAttentionScore输入为(B, T, N, F)。输出为(B, T, N, F)
-            n_q_t = self.w_t(self.node_embedding.unsqueeze(dim=-1).unsqueeze(dim=-1)).squeeze()  # 时间维度查询矩阵query，通过节点嵌入计算得到 (num_nodes, hidden_size)
+            n_q_t = self.w_t(self.node_embedding.unsqueeze(dim=-1).unsqueeze(dim=-1)).squeeze(-1).squeeze(-1)  # 时间维度查询矩阵query，通过节点嵌入计算得到 (num_nodes, hidden_size)
             x_t_a = self.ComputeAttentionScore(x_t, n_q_t)  # 时间维度注意力分数(通过时间卷积模块计算得到)
 
             # 计算空间维度的注意力分数
-            n_q_s = self.w_s(self.node_embedding.unsqueeze(dim=-1).unsqueeze(dim=-1)).squeeze()  # 空间维度查询矩阵query (num_nodes, hidden_size)
+            n_q_s = self.w_s(self.node_embedding.unsqueeze(dim=-1).unsqueeze(dim=-1)).squeeze(-1).squeeze(-1)  # 空间维度查询矩阵query (num_nodes, hidden_size)
             x_s_a = self.ComputeAttentionScore(x_s, n_q_s)  # 空间维度注意力分数(通过空间模块计算得到)
 
             # node-level adaptation tendencies

@@ -132,7 +132,9 @@ class RLMC_env:
         if not done:
             obs, err = self._get_state()
         else:
-            obs, err = None, None
+            # 返回零值占位而非 None，避免 replay buffer 中出现 None 导致 np.array 异常
+            obs = np.zeros_like(self.data_x[0])
+            err = np.zeros_like(self.data_error[0])
 
         return obs, err, reward, done, {}
 

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DMGENet 修稿优先级清单与 Rebuttal 模板</title>
+  <style>
+    :root {
+      --bg: #f5f1e8;
+      --panel: #fffdf8;
+      --ink: #1f2937;
+      --muted: #5b6472;
+      --line: #ddd2c1;
+      --brand: #2d6a4f;
+      --brand-soft: #dfeee6;
+      --warn: #b45309;
+      --warn-soft: #fff1d6;
+      --danger: #b42318;
+      --danger-soft: #fde7e6;
+      --info: #1d4ed8;
+      --info-soft: #e7efff;
+      --shadow: 0 12px 28px rgba(31, 41, 55, 0.08);
+      --radius: 18px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(45, 106, 79, 0.10), transparent 24%),
+        radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 20%),
+        linear-gradient(180deg, #f8f5ee 0%, var(--bg) 100%);
+      line-height: 1.6;
+    }
+
+    .page {
+      width: min(1200px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 60px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(45, 106, 79, 0.95), rgba(37, 99, 235, 0.92));
+      color: white;
+      border-radius: 28px;
+      padding: 34px 32px 28px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -70px;
+      top: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.10);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.18;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 880px;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 16px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 13px;
+    }
+
+    .nav {
+      margin: 18px 0 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .nav a {
+      color: var(--ink);
+      text-decoration: none;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(221, 210, 193, 0.9);
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      font-size: 14px;
+    }
+
+    .section {
+      margin-top: 28px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 24px;
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 26px;
+      line-height: 1.2;
+    }
+
+    .section h3 {
+      margin: 24px 0 10px;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .section p { margin: 10px 0; color: var(--muted); }
+    .section ul { margin: 10px 0 0 20px; padding: 0; }
+    .section li { margin: 8px 0; }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.cards-3 {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .grid.cards-2 {
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    }
+
+    .card {
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .card.danger {
+      background: linear-gradient(180deg, var(--danger-soft), #fff 68%);
+      border-color: #efb6b3;
+    }
+
+    .card.warn {
+      background: linear-gradient(180deg, var(--warn-soft), #fff 68%);
+      border-color: #eccb8d;
+    }
+
+    .card.info {
+      background: linear-gradient(180deg, var(--info-soft), #fff 68%);
+      border-color: #bfd0ff;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 4px 9px;
+      margin-bottom: 10px;
+      letter-spacing: 0.02em;
+    }
+
+    .badge.p0 { background: var(--danger-soft); color: var(--danger); }
+    .badge.p1 { background: var(--warn-soft); color: var(--warn); }
+    .badge.p2 { background: var(--info-soft); color: var(--info); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #f7f3ec;
+      color: #243244;
+      font-weight: 700;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .flow {
+      margin-top: 14px;
+      padding: 18px;
+      border: 1px dashed #c9bca8;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fffaf2, #fff);
+    }
+
+    .steps {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      margin-top: 6px;
+    }
+
+    .step {
+      position: relative;
+      padding: 14px 14px 14px 16px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      min-height: 122px;
+    }
+
+    .step .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: white;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .template {
+      margin-top: 16px;
+      background: #fbfaf7;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .template pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: var(--sans);
+      font-size: 14px;
+      color: #223041;
+    }
+
+    .callout {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border-left: 5px solid var(--brand);
+      background: var(--brand-soft);
+      color: #174030;
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    code {
+      font-family: var(--mono);
+      background: #f4efe7;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.95em;
+    }
+
+    .foot {
+      margin-top: 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 720px) {
+      .hero h1 { font-size: 28px; }
+      .section { padding: 22px 18px; }
+      table, thead, tbody, th, td, tr { display: block; }
+      thead { display: none; }
+      tr {
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: white;
+      }
+      td {
+        border-bottom: 1px solid var(--line);
+      }
+      td:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>DMGENet 修稿优先级清单 + Rebuttal 回复模板</h1>
+      <p>这份网页文档把当前项目核查出的论文与代码问题，整理成可执行的修稿优先级、 reviewer 对应动作、以及可直接套用的 rebuttal 模板。目标不是“全面重做”，而是在尽量短时间内先修掉高风险问题，再补最能打动审稿人的证据链。</p>
+      <div class="meta">
+        <span class="chip">期刊状态: Major Revision</span>
+        <span class="chip">当前项目: DMGENet</span>
+        <span class="chip">核心目标: 快速提高可信度与可接受性</span>
+      </div>
+    </header>
+
+    <nav class="nav">
+      <a href="#summary">总览</a>
+      <a href="#priority">修稿优先级</a>
+      <a href="#action-board">审稿意见对照</a>
+      <a href="#rebuttal">Rebuttal 模板</a>
+      <a href="#writing">写作注意事项</a>
+    </nav>
+
+    <section id="summary" class="section">
+      <h2>一页总览</h2>
+      <div class="grid cards-3">
+        <div class="card danger">
+          <span class="badge p0">P0 必须先改</span>
+          <strong>先处理会影响可信度的问题</strong>
+          <p>测试集泄漏、论文与代码实验设置不一致、 ASTAM / RLMC 描述与实现偏差、标题摘要关键词格式违规。这些问题不先修，后面的补实验很难真正起作用。</p>
+        </div>
+        <div class="card warn">
+          <span class="badge p1">P1 高收益补强</span>
+          <strong>补足审稿人最在意的证据</strong>
+          <p>补 12h / 24h 结果、补更强 baseline、补 mean ± std 与显著性、补硬件和训练协议、补效率分析与 limitations。</p>
+        </div>
+        <div class="card info">
+          <span class="badge p2">P2 有时间再做</span>
+          <strong>进一步提升说服力</strong>
+          <p>新数据集泛化、噪声鲁棒性、漂移统计检验、更多阈值和超参数敏感性、更多可解释性图表。这些加分明显，但不一定是短期硬门槛。</p>
+        </div>
+      </div>
+
+      <div class="flow">
+        <h3 style="margin-top:0;">建议修稿冲刺顺序</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="num">1</div>
+            <strong>先统一事实版本</strong>
+            <p>把论文里所有“窗口长度、预测步长、标准化方式、图记号、模块公式”改成与最终实验脚本一致。</p>
+          </div>
+          <div class="step">
+            <div class="num">2</div>
+            <strong>修掉评估漏洞</strong>
+            <p>明确验证集训练 Actor、测试集只报告最终结果，避免任何“用 test 选模型”的流程。</p>
+          </div>
+          <div class="step">
+            <div class="num">3</div>
+            <strong>补最关键实验</strong>
+            <p>优先整理 1h / 6h / 12h / 24h，以及更强 baseline、ablation、ensemble 对比。</p>
+          </div>
+          <div class="step">
+            <div class="num">4</div>
+            <strong>补可复现信息</strong>
+            <p>把硬件、软件版本、超参数、随机种子、训练轮数、指标统计都写完整。</p>
+          </div>
+          <div class="step">
+            <div class="num">5</div>
+            <strong>最后润色 rebuttal</strong>
+            <p>把每条意见分成“承认问题 / 已做修改 / 修改位置 / 残余限制”四部分，语气平稳、具体、可核查。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="priority" class="section">
+      <h2>修稿优先级清单</h2>
+      <p>下面这张表按“风险大小”和“短时间内的收益”排序。建议修稿时严格按这张表推进，不要一上来就先补文献综述或美化图表。</p>
+      <table>
+        <thead>
+          <tr>
+            <th>优先级</th>
+            <th>问题</th>
+            <th>论文修改动作</th>
+            <th>代码 / 实验修改动作</th>
+            <th>预期收益</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge p0">P0</span></td>
+            <td>测试集泄漏</td>
+            <td>明确说明 validation 用于 RL 训练与模型选择， test 仅作最终评估；重写实验协议段落。</td>
+            <td>取消基于 test loss 选最佳 Actor 和最佳 run 的流程，改为基于 validation 选择。</td>
+            <td>直接修复最严重的方法学漏洞，是 rebuttal 的第一优先项。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p0">P0</span></td>
+            <td>论文与代码设置不一致</td>
+            <td>统一窗口长度、预测步长、标准化方式、图记号、功能图命名、ASTAM 公式描述。</td>
+            <td>确定最终采用的真实配置后，只保留对应版本的实验结果和脚本。</td>
+            <td>防止 reviewer 继续抓“技术不一致”和“复现不可信”。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p0">P0</span></td>
+            <td>标题 / 摘要 / 关键词格式违规</td>
+            <td>去除标题和关键词中的缩写，摘要中所有缩写首次完整定义。</td>
+            <td>无核心代码动作，但需要统一稿件与投稿系统内容。</td>
+            <td>这是编辑部硬规范，不改可能直接卡流程。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p1">P1</span></td>
+            <td>12h / 24h 结果与更长 horizon 论证不足</td>
+            <td>在主结果表与讨论中突出 12h / 24h，解释多步误差累积规律。</td>
+            <td>整理现有 12 / 24 小时实验；若可能，补 1 / 6 / 12 / 24 四档统一对照。</td>
+            <td>直接回应 Reviewer #1 对行业标准 horizon 的质疑。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p1">P1</span></td>
+            <td>baseline 不够强</td>
+            <td>补最新且相关的 air quality forecasting 对比，给出 baseline 选择理由。</td>
+            <td>优先补可快速实现或可复用公开实现的强基线，至少补静态平均集成与固定权重集成。</td>
+            <td>这是三位 reviewer 的共识问题，补上后整体说服力会上一个台阶。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p1">P1</span></td>
+            <td>统计显著性与方差缺失</td>
+            <td>所有核心表格改为 mean ± std，必要时补 t-test 或 Wilcoxon 说明。</td>
+            <td>基础模型和 RLMC 都按多随机种子重复运行并保存统计结果。</td>
+            <td>能显著缓解“结果偶然性”质疑。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p1">P1</span></td>
+            <td>复现信息不足</td>
+            <td>新增 Implementation Details / Reproducibility 小节。</td>
+            <td>补硬件、 CUDA / PyTorch 版本、 batch size、随机种子、训练轮数、学习率策略、参数量与耗时。</td>
+            <td>这类信息补起来快，但 reviewer 非常看重。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p1">P1</span></td>
+            <td>Discussion / Limitations 太弱</td>
+            <td>新增 limitations 小节，结论中给出具体数字， discussion 解释各图的贡献差异。</td>
+            <td>从现有消融与单图结果里提炼“为何 N / F 图更关键”等证据。</td>
+            <td>对 Reviewer #3 的满足度提升很快。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p2">P2</span></td>
+            <td>数据过旧与泛化问题</td>
+            <td>若无法补新数据，必须诚实写入 limitations，并弱化“现实部署”措辞。</td>
+            <td>有条件时新增一个较新的城市数据集或时间段做外部验证。</td>
+            <td>高价值，但时间成本最高。</td>
+          </tr>
+          <tr>
+            <td><span class="badge p2">P2</span></td>
+            <td>鲁棒性 / 漂移分析缺失</td>
+            <td>补 non-stationarity 讨论、噪声与缺失值鲁棒性实验。</td>
+            <td>增加输入扰动、滚动均值方差、简单漂移统计脚本。</td>
+            <td>能进一步回应 Reviewer #1 / #2，但不是首要门槛。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        建议实际执行时把全部工作分成两轮。第一轮只做 P0 + 最有把握的 P1，先确保“方法学没硬伤”；第二轮再补高成本实验和更多图表。
+      </div>
+    </section>
+
+    <section id="action-board" class="section">
+      <h2>审稿意见对照行动板</h2>
+      <p>这一部分适合在修稿时做任务分派。每条 reviewer 意见都尽量拆成“论文动作”和“代码动作”，避免出现“论文想改但实验跟不上”或者“代码改了但文稿没跟”的情况。</p>
+
+      <h3>Reviewer #1</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>问题</th>
+            <th>最短路径回应</th>
+            <th>建议落点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>数据集较旧</td>
+            <td>最佳方案是补新数据；若时间不够，明确承认限制，并把“practical utility”降级成“validated on this benchmark”。</td>
+            <td>Introduction, Discussion, Limitations, Conclusion</td>
+          </tr>
+          <tr>
+            <td>预测 horizon 太短</td>
+            <td>突出 12h / 24h 结果，主表按 1 / 6 / 12 / 24 或完整 1-24h 展示。</td>
+            <td>Main results table, Discussion</td>
+          </tr>
+          <tr>
+            <td>缺少强 baseline</td>
+            <td>补近两年强相关模型，至少说明为什么选这些 baseline。</td>
+            <td>Related Work, Baselines, Results</td>
+          </tr>
+          <tr>
+            <td>图记号不统一</td>
+            <td>统一 D / N / S / F，避免 POI / F 混用。</td>
+            <td>Figures, equations, text, table captions</td>
+          </tr>
+          <tr>
+            <td>未讨论 distribution drift</td>
+            <td>补非平稳性讨论和简单统计分析，至少说明模型如何缓解而非彻底解决漂移。</td>
+            <td>Method motivation, Discussion</td>
+          </tr>
+          <tr>
+            <td>MDP 状态长度和 Markov 假设</td>
+            <td>先把论文里的状态长度改成真实实验设置，再明确说这是近似 MDP，而不是严格成立。</td>
+            <td>RLMC section, Limitations</td>
+          </tr>
+          <tr>
+            <td>超参数选择显得启发式</td>
+            <td>补 sensitivity study，比直接做复杂元启发式优化更省时。</td>
+            <td>Appendix or extra experiment subsection</td>
+          </tr>
+          <tr>
+            <td>未说明为何 RL ensemble 优于多任务学习</td>
+            <td>在引言和讨论中明确“动态样本级权重分配”是 RL ensemble 的主要优势。</td>
+            <td>Introduction, Discussion</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Reviewer #2</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>问题</th>
+            <th>最短路径回应</th>
+            <th>建议落点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>novelty 不够清楚</td>
+            <td>不要把每个子模块都写成全新，而要强调“多图建模 + 时空异质性建模 + 动态强化集成”的组合创新。</td>
+            <td>Abstract, Introduction, Contributions</td>
+          </tr>
+          <tr>
+            <td>理论支撑不足</td>
+            <td>补每个设计选择的动机和假设边界，尤其是 ASTAM、RLMC、图构建。</td>
+            <td>Method section</td>
+          </tr>
+          <tr>
+            <td>对比不充分</td>
+            <td>补 SOTA，并说明实现来源、参数公平性和训练协议。</td>
+            <td>Baselines and Results</td>
+          </tr>
+          <tr>
+            <td>claim 过强</td>
+            <td>删掉 unsupported claims，把“robust / generalizable / practical”改成更谨慎的 benchmark 范围表述。</td>
+            <td>Abstract, Conclusion</td>
+          </tr>
+          <tr>
+            <td>可复现性不足</td>
+            <td>单列一节写 implementation details，并公开脚本结构。</td>
+            <td>Implementation details</td>
+          </tr>
+          <tr>
+            <td>统计显著性缺失</td>
+            <td>统一给 mean ± std，补 significance note。</td>
+            <td>All result tables</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Reviewer #3</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>问题</th>
+            <th>最短路径回应</th>
+            <th>建议落点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>结论太泛</td>
+            <td>结论首段直接写具体数字和最强对比对象，不要只说“outperforms baselines”。</td>
+            <td>Conclusion</td>
+          </tr>
+          <tr>
+            <td>缺少 limitations</td>
+            <td>单开小节，写数据集、外部泛化、图构建先验、RL 近似假设、计算成本。</td>
+            <td>Discussion / Limitations</td>
+          </tr>
+          <tr>
+            <td>discussion 太浅</td>
+            <td>结合 Table 5 / 6 解释为什么邻居图、功能图、ASTAM 或某些组件更重要。</td>
+            <td>Discussion</td>
+          </tr>
+          <tr>
+            <td>图表质量与术语一致性</td>
+            <td>统一缩写、轴标签、站点名、caption 结构；图尽量导出矢量格式。</td>
+            <td>All figures and tables</td>
+          </tr>
+          <tr>
+            <td>标题摘要关键词缩写违规</td>
+            <td>严格按期刊要求改，不要和 reviewer 争论。</td>
+            <td>Title, Abstract, Keywords, submission system</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="rebuttal" class="section">
+      <h2>Rebuttal 回复模板</h2>
+      <p>下面的模板默认是英文回复格式，因为大多数 rebuttal / response letter 最终都需要英文提交。你们可以直接替换中括号中的内容，再根据最终修改位置补页码、表号、图号和附录编号。</p>
+
+      <h3>总回应开头模板</h3>
+      <div class="template">
+        <pre>Dear Editor and Reviewers,
+
+We sincerely thank the Editor and the Reviewers for their careful reading of our manuscript and for the constructive comments. We have thoroughly revised the manuscript and carefully re-checked the code, experimental protocol, figures, tables, and implementation details. In the revised version, we focused on three aspects:
+
+(1) correcting methodological inconsistencies between the manuscript and the final implementation;
+(2) strengthening the experimental evidence with additional analyses, clearer protocol description, and improved reporting;
+(3) improving the writing, figures, discussion, and journal-format compliance.
+
+Below we provide a point-by-point response to each comment. All changes in the manuscript have been marked [in color / with tracked changes], and the major revisions are summarized in [Section / Appendix / Response summary].</pre>
+      </div>
+
+      <h3>Reviewer #1 回复模板</h3>
+      <div class="template">
+        <pre>Comment R1-[编号]:
+[粘贴 reviewer 原文或简短概述]
+
+Response:
+We thank the reviewer for this important comment. We agree that [简要承认问题的核心，不要回避].
+
+In the revised manuscript, we have made the following changes:
+1. [论文修改动作 1]
+2. [论文修改动作 2]
+3. [实验或代码修改动作]
+
+Specifically:
+- Manuscript change: [写清修改到哪一节、哪一页、哪张表、哪幅图]
+- Experimental change: [写清新增或重做了什么实验]
+- Implementation change: [写清训练协议、数据划分、参数或代码逻辑如何修正]
+
+These revisions now clarify that [这里写 reviewer 关切点是如何被解决的].
+
+If the issue cannot be fully resolved within the current revision, we have explicitly acknowledged it as a limitation in [section/page], where we state that [简短限制表述].</pre>
+      </div>
+
+      <h3>Reviewer #2 回复模板</h3>
+      <div class="template">
+        <pre>Comment R2-[编号]:
+[粘贴 reviewer 原文或简短概述]
+
+Response:
+We appreciate the reviewer for highlighting this issue. We have revised the manuscript to better support the technical contribution and improve the rigor of the experimental presentation.
+
+The revision includes:
+- [补 novelty / theory / baseline 的动作]
+- [补统计 / 可复现 / 效率分析的动作]
+- [补语言或结构的动作]
+
+To make the contribution clearer, we now explicitly define the novelty of our work as follows:
+[用 2 到 3 句总结，不要写成长段]
+
+In addition, we added [new subsection / new table / new appendix] to provide [implementation details / significance analysis / computational cost analysis], which directly addresses the reviewer’s concern.</pre>
+      </div>
+
+      <h3>Reviewer #3 回复模板</h3>
+      <div class="template">
+        <pre>Comment R3-[编号]:
+[粘贴 reviewer 原文或简短概述]
+
+Response:
+We thank the reviewer for this helpful suggestion. We have revised the manuscript accordingly.
+
+The main updates are:
+1. [结论或讨论修改]
+2. [limitations 修改]
+3. [figure / table / terminology 修改]
+
+For example, in the revised Conclusion, we now report the key quantitative findings instead of only general statements. We also added a dedicated limitations discussion in [section/page], covering [dataset age, external generalization, graph construction assumptions, reinforcement learning approximation, computational cost].
+
+These changes improve both the clarity and the scientific caution of the revised manuscript.</pre>
+      </div>
+
+      <h3>针对当前项目最关键问题的现成回复草案</h3>
+
+      <div class="grid cards-2">
+        <div class="card">
+          <strong>模板 A: 关于测试集泄漏</strong>
+          <div class="template">
+            <pre>We thank the reviewer for raising this critical concern. After re-checking the implementation, we found that the previous reinforcement-learning ensemble pipeline did not separate validation-based model selection from final test-only evaluation strictly enough. In the revised version, we corrected the protocol so that the Actor network is trained and selected using the validation set only, while the test set is used exclusively for the final performance report. We updated both the experimental description and the implementation accordingly. The corresponding description has been revised in the Experimental Setup section, and the updated results are reported in [Table/Figure].</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>模板 B: 关于论文与代码设置不一致</strong>
+          <div class="template">
+            <pre>We appreciate the reviewer for pointing out the inconsistency. We carefully re-examined the manuscript and the implementation, and unified the reported settings in the revised version, including the historical window length, forecasting horizon configuration, normalization description, graph notation, and module descriptions. The manuscript now reflects the final experimental configuration consistently, and the related tables and method descriptions have been updated accordingly.</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>模板 C: 关于 ASTAM / 模块理论描述不清</strong>
+          <div class="template">
+            <pre>We thank the reviewer for this comment. We have revised the ASTAM description to more accurately reflect its implemented mechanism and clarified the role of node embeddings, temporal representation, and spatial representation in the adaptive fusion process. We also revised the figure caption and the corresponding equations to avoid overstating the attention formulation beyond what is actually implemented.</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>模板 D: 关于旧数据集与泛化能力</strong>
+          <div class="template">
+            <pre>We agree that the age of the dataset limits the practical generalization claim of the study. In the revised manuscript, we have moderated the related claims and explicitly added this issue to the limitations section. In addition, we [added an extra dataset / added a discussion of the limitation if an extra dataset could not be incorporated within the revision cycle].</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="writing" class="section">
+      <h2>写作注意事项</h2>
+      <div class="grid cards-2">
+        <div class="card warn">
+          <strong>回复时尽量避免</strong>
+          <ul>
+            <li>不要说 “the reviewer misunderstood”. 用 “we have clarified” 更稳妥。</li>
+            <li>不要硬说 “this does not affect the conclusion” 除非你们真的重跑并验证过。</li>
+            <li>不要把所有问题都写成“future work”，尤其是测试协议和格式规范类问题。</li>
+            <li>不要把“当前代码支持”直接等同于“论文已证明”，必须给表格或文字证据。</li>
+          </ul>
+        </div>
+        <div class="card info">
+          <strong>回复时建议坚持</strong>
+          <ul>
+            <li>每条意见都按 “感谢 + 承认 / 澄清 + 已改内容 + 修改位置” 的结构来写。</li>
+            <li>如果没有完全满足，也要诚实写残余限制和当前 revision 的边界。</li>
+            <li>所有新增实验都要写清随机种子、数据划分、评价指标和硬件环境。</li>
+            <li>结论和摘要都要收敛到“在本 benchmark 上”的证据范围内。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>标题 / 摘要 / 关键词快速改写建议</h3>
+      <div class="template">
+        <pre>Title candidate:
+Reinforcement learning-based spatiotemporal dynamic multi-graph ensemble framework for multi-station air quality prediction
+
+Keyword candidate:
+artificial intelligence; air quality prediction; multi-station forecasting; reinforcement learning; graph neural network; spatiotemporal modeling
+
+Abstract writing note:
+Avoid undefined acronyms in the first appearance. If an acronym must be used later, define it once in full first.
+Avoid overclaiming words such as "robust", "practical", and "generalizable" unless they are directly supported by experiments.</pre>
+      </div>
+
+      <div class="foot">
+        文档使用建议: 这份 HTML 适合作为内部修稿看板，也适合在回复信撰写时直接复制模板片段。若后续需要，我还可以继续把它扩展成“逐条意见的中英双语回复稿初版”。
+      </div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,5 @@
+horizon,rlmc_mean_rmse,best_single_rmse,best_single_model,improvement_pct,wilcoxon_p,significant_005
+1h,16.3631,16.5125,Model_N,0.9,0.000977,True
+6h,35.7971,35.8384,Model_N,0.12,0.1875,False
+12h,48.1113,47.7468,Model_N,-0.76,0.999023,False
+24h,61.4154,62.0491,Model_POI,1.02,0.001953,True

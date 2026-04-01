@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import torch
+import matplotlib
+matplotlib.use('Agg')  # 非交互后端，不弹窗，支持无头服务器
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 
@@ -23,15 +25,18 @@ def normalize_adj(adj_matrix):
     return adj_matrix.dot(r_mat_inv_sqrt).transpose().dot(r_mat_inv_sqrt)
 
 
-def plot_loss(train_loss, val_loss, test_loss):
-    plt.plot(train_loss, label='Training Loss')
-    plt.plot(val_loss, label='Validation Loss')
-    plt.plot(test_loss, label='Test Loss')
-    plt.legend()
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.title('Training, Validation and Test Loss')
-    plt.show()
+def plot_loss(train_loss, val_loss, test_loss, save_path=None):
+    fig, ax = plt.subplots()
+    ax.plot(train_loss, label='Training Loss')
+    ax.plot(val_loss, label='Validation Loss')
+    ax.plot(test_loss, label='Test Loss')
+    ax.legend()
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Loss')
+    ax.set_title('Training, Validation and Test Loss')
+    if save_path:
+        fig.savefig(save_path, dpi=100, bbox_inches='tight')
+    plt.close(fig)
 
 
 # def adjust_learning_rate(optimizer, epoch, start_lr):

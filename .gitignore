@@ -3,3 +3,10 @@ dataset/
 *.pt
 __pycache__/
 *.log
+.env
+.codex
+# experiment outputs (large)
+预测结果_基础模型_*/
+RLMC_final_预测结果_*/
+RLMC_final_数据集_*/
+logs/

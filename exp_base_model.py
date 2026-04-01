@@ -13,7 +13,7 @@ from _Support.Graph_Construction_Beijing_12 import calculate_the_neighbor_matrix
 from _Support.Graph_Construction_Beijing_12 import calculate_the_similarity_matrix
 
 from utils.metrics import metric_mutil_sites
-from utils.tools import adjust_learning_rate, EarlyStopping, setup_seed, plot_loss
+from utils.tools import adjust_learning_rate, EarlyStopping, setup_seed
 
 import torch.multiprocessing as mp
 mp.set_sharing_strategy('file_system')
@@ -49,7 +49,7 @@ print("Functional similarity matrix - 阈值: 0.7")
 
 
 class Exp_model:
-    def __init__(self, model_name, model, epoch, learning_rate, target, batch_size, num_workers, dataset, seq_len, predict_len):
+    def __init__(self, model_name, model, epoch, learning_rate, target, batch_size, num_workers, dataset, seq_len, predict_len, results_folder_override=None):
         self.model_name = model_name
         self.model = model.cuda()
         self.epoch = epoch
@@ -58,8 +58,11 @@ class Exp_model:
 
         print(f'chosen dataset:{dataset} model_name:{self.model_name} forecasting target:{self.target} predict_len:{predict_len}')
 
-        # 预测结果保存路径
-        self.results_folder = os.path.join(f'./预测结果_基础模型_{dataset}', str(seq_len), str(predict_len), self.model_name)
+        # 预测结果保存路径 (支持外部覆盖，用于多种子实验)
+        if results_folder_override is not None:
+            self.results_folder = results_folder_override
+        else:
+            self.results_folder = os.path.join(f'./预测结果_基础模型_{dataset}', str(seq_len), str(predict_len), self.model_name)
         os.makedirs(self.results_folder, exist_ok=True)
 
         # 数据集文件夹路径
@@ -81,21 +84,22 @@ class Exp_model:
         test_loss = []
 
         self.model.eval()
-        for i, (features, target) in enumerate(self.val_loader):
-            features = features.cuda()
-            target = target.cuda()
-            pred, true = self.model(features), target
-            loss = criterion(pred, true)
-            val_loss.append(loss.item())
-        val_loss = np.average(val_loss)
+        with torch.no_grad():
+            for i, (features, target) in enumerate(self.val_loader):
+                features = features.cuda()
+                target = target.cuda()
+                pred, true = self.model(features), target
+                loss = criterion(pred, true)
+                val_loss.append(loss.item())
+            val_loss = np.average(val_loss)
 
-        for i, (features, target) in enumerate(self.test_loader):
-            features = features.cuda()
-            target = target.cuda()
-            pred, true = self.model(features), target
-            loss = criterion(pred, true)
-            test_loss.append(loss.item())
-        test_loss = np.average(test_loss)
+            for i, (features, target) in enumerate(self.test_loader):
+                features = features.cuda()
+                target = target.cuda()
+                pred, true = self.model(features), target
+                loss = criterion(pred, true)
+                test_loss.append(loss.item())
+            test_loss = np.average(test_loss)
         self.model.train()
 
         return val_loss, test_loss
@@ -163,7 +167,6 @@ class Exp_model:
         train_loss_df = pd.DataFrame(
             {'epoch_time': epoch_time, 'train_loss': train_loss, 'val_loss': val_loss, 'test_loss': test_loss})
 
-        plot_loss(train_loss, val_loss, test_loss)
 
         # train_loss saving
         train_loss_df.to_csv(os.path.join(self.results_folder, 'loss.csv'), index=True, index_label='epoch')

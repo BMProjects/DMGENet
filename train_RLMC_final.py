@@ -93,9 +93,9 @@ class Exp:
 
         episode_time = []
         episode_rewards = []
-        test_losses = []
+        val_losses = []
 
-        best_test_loss = float("inf")  # 初始化最佳 loss
+        best_val_loss = float("inf")  # 基于验证集（RL训练数据）选择最佳模型
 
         for episode in range(self.episodes):
             start_time = time.time()
@@ -120,7 +120,7 @@ class Exp:
                     reward,
                     next_observation,
                     next_error,
-                    done
+                    float(done)
                 )
 
                 # 更新网络
@@ -137,27 +137,27 @@ class Exp:
             episode_time.append(end_time - start_time)
             episode_rewards.append(episode_reward)
 
-            # ===== 测试集 loss =====
-            test_loss = self.compute_test_loss(
-                self.test_X,
-                self.test_history_errors,
-                self.test_y,
-                self.test_predictions_all,
+            # ===== 验证集 loss（使用RL训练数据评估，不使用测试集选模型）=====
+            val_loss = self.compute_test_loss(
+                self.train_X,
+                self.train_history_errors,
+                self.train_y,
+                self.train_predictions_all,
                 batch_size=256
             )
-            test_losses.append(test_loss)
+            val_losses.append(val_loss)
 
             # ===== 打印信息 =====
             print(
-            f"Episode: {episode+1:<4}"   # 左对齐，宽度 4
-            f" | Time: {end_time-start_time:6.2f}s"  # 宽度 6，保留 2 位小数
-            f" | Reward: {episode_reward:12.6f}"     # 宽度 12，6 位小数
-            f" | Test Loss: {test_loss:15.10f}", end=" "      # 宽度 12，6 位小数
+            f"Episode: {episode+1:<4}"
+            f" | Time: {end_time-start_time:6.2f}s"
+            f" | Reward: {episode_reward:12.6f}"
+            f" | Val Loss: {val_loss:15.10f}", end=" "
             )
 
-            # ===== 保存最佳模型 =====
-            if test_loss < best_test_loss:
-                best_test_loss = test_loss
+            # ===== 基于验证集 loss 保存最佳模型 =====
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
                 torch.save(
                     self.agent.actor.state_dict(),
                     os.path.join(self.results_folder, "best_actor.pth")
@@ -166,7 +166,7 @@ class Exp:
                     self.agent.critic.state_dict(),
                     os.path.join(self.results_folder, "best_critic.pth")
                 )
-                print(f"✅ Episode {episode+1}: 保存新的最佳模型, test_loss={best_test_loss:.10f}")
+                print(f"✅ Episode {episode+1}: 保存新的最佳模型, val_loss={best_val_loss:.10f}")
             else:
                 print("")
 
@@ -175,7 +175,7 @@ class Exp:
             "episode": list(range(1, self.episodes + 1)),
             "episode_time": episode_time,
             "reward": episode_rewards,
-            "test_loss": test_losses
+            "val_loss": val_losses
         })
         log_path = os.path.join(self.results_folder, "train_log.csv")
         log_df.to_csv(log_path, index=False)
@@ -463,7 +463,7 @@ replay_buffer_size = 2000
 def main():
     repeat_times = 10  # ⭐训练次数
 
-    for predict_len in [6, 12, 24]:
+    for predict_len in [1, 6, 12, 24]:
         for model in [
             'proposed',
         ]:
@@ -515,7 +515,7 @@ def main():
             # =========================
             # ⭐ 多次训练
             # =========================
-            best_metric = float('inf')
+            best_val_metric = float('inf')
             best_run = -1
 
             all_results = []  # ⭐保存所有run指标
@@ -562,6 +562,12 @@ def main():
                 exp.train()
                 print("✅ 训练结束")
 
+                # ===== 基于验证集（RL训练数据）选择最佳 run =====
+                val_loss = exp.compute_test_loss(
+                    train_X, train_history_errors, train_y, train_predictions_all,
+                    batch_size=256
+                )
+
                 print("🧪 测试开始")
 
                 # ⭐⭐⭐ 关键：接收预测结果
@@ -573,7 +579,8 @@ def main():
 
                 print(
                     f"📊 Run {run+1}: "
-                    f"MAE={mae:.3f}, RMSE={rmse:.3f}, IA={ia:.4f}, R2={r2:.4f}"
+                    f"MAE={mae:.3f}, RMSE={rmse:.3f}, IA={ia:.4f}, R2={r2:.4f}, "
+                    f"Val Loss={val_loss:.6f}"
                 )
 
                 # =========================
@@ -584,19 +591,20 @@ def main():
                     "MAE": mae,
                     "RMSE": rmse,
                     "IA": ia,
-                    "R2": r2
+                    "R2": r2,
+                    "val_loss": val_loss
                 })
 
                 # =========================
-                # ⭐ 更新最优模型 + 保存预测
+                # ⭐ 基于验证集 loss 更新最优模型（不使用测试集选择）
                 # =========================
-                if mae < best_metric:
+                if val_loss < best_val_metric:
                     pd.DataFrame([metrics], columns=["MAE","RMSE","IA","R2"]).to_csv(os.path.join(results_folder, "best_metrics.csv"),index=False)
-                    
-                    best_metric = mae
+
+                    best_val_metric = val_loss
                     best_run = run
 
-                    print(f"🏆 当前最优: Run {run+1}, MAE={mae:.4f}")
+                    print(f"🏆 当前最优: Run {run+1}, val_loss={val_loss:.6f}")
 
                     # 保存模型
                     torch.save(
@@ -641,7 +649,7 @@ def main():
             std = df.std(numeric_only=True)
 
             print("\n============================")
-            print(f"🎯 最优Run: {best_run+1}, MAE={best_metric:.4f}")
+            print(f"🎯 最优Run(by val_loss): {best_run+1}, val_loss={best_val_metric:.6f}")
             print(
                 f"📊 MAE = {mean['MAE']:.3f} ± {std['MAE']:.3f}\n"
                 f"📊 RMSE = {mean['RMSE']:.3f} ± {std['RMSE']:.3f}\n"
