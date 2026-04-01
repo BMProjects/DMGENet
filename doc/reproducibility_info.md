@@ -88,10 +88,13 @@ Inverse transform applied before metric computation.
 
 | Stage | h=1 | h=6 | h=12 | h=24 |
 |-------|-----|-----|------|------|
-| Base model (per graph) | ~3 min | ~3 min | ~3 min | ~3 min |
-| 4 base models total | ~12 min | ~12 min | ~12 min | ~12 min |
-| RLMC (10 runs × 200 ep) | ~1h 10min | ~1h 10min | ~1h 10min | ~1h 10min |
-| **Full pipeline (4 horizons)** | **~5h** | — | — | **~5h total** |
+| Base model per graph | 2.8 min | 1.8 min | 1.7 min | 1.2 min |
+| 4 base models total | 11.2 min | 7.2 min | 6.8 min | 4.8 min |
+| RLMC (10 runs × 200 ep) | 59 min | 59 min | 59 min | 60 min |
+| **Total per horizon** | **~70 min** | **~66 min** | **~66 min** | **~65 min** |
+| **Full pipeline (4 horizons)** | — | — | — | **~267 min (~4.5h)** |
+
+Average epochs before early stopping: 22.5 (h=1), 14.8 (h=6), 13.5 (h=12), 10.0 (h=24)
 
 ---
 

@@ -42,7 +42,19 @@ DMGENet generalizes to Delhi NCT despite three key differences from Beijing: (1)
 
 **Key finding**: At h=12 and h=24, Delhi achieves *lower error* than Beijing despite higher absolute concentrations. We attribute this to Delhi's stronger diurnal and seasonal pollution cycles — driven by consistent agricultural burning patterns and temperature-driven boundary layer variations — which GNN spatial structures can capture more reliably.
 
-The Neighbor graph remains dominant in Delhi (N weight ~0.37–0.49 across horizons), consistent with Beijing, suggesting that wind-corridor adjacency is a generalizable inductive bias for urban air quality prediction.
+Strikingly, the RLMC agent learns **completely different** weight profiles for Delhi vs. Beijing:
+
+**Table: Delhi NCT mean RLMC ensemble weights**
+| Horizon | D | N | S | F |
+|---------|---|---|---|---|
+| 1h  | 0.002 | 0.453 | 0.043 | 0.504 |
+| 6h  | 0.013 | 0.520 | 0.169 | 0.299 |
+| 12h | **0.996** | 0.000 | 0.004 | 0.001 |
+| 24h | 0.001 | 0.006 | **0.883** | 0.111 |
+
+In Beijing, the Neighbor graph (N) dominates consistently (37–59%). In Delhi, the agent discovers entirely different optimal strategies: at h=12, geographic distance dominates (D=0.996); at h=24, distributional similarity dominates (S=0.883). These extreme but stable weights (confirmed across all 10 runs, MAE std=0.015 for h=12) reflect genuine differences in Delhi's pollution dynamics: Delhi's larger station footprint (spanning ~800 km²) creates stronger distance-based concentration gradients, and Delhi's bimodal seasonal pattern (pre-monsoon/post-monsoon) creates strong distributional similarity across the annual cycle.
+
+This dramatic difference between Beijing and Delhi weight patterns provides strong evidence for the value of adaptive ensemble weighting: a fixed global weighting strategy would fail to capture city-specific pollution dynamics.
 
 ---
 
