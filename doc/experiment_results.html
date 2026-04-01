@@ -330,6 +330,46 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════ 多种子稳定性 ══════════════════════════════════ -->
+<hr class="divider">
+<div class="section-title">基础模型多种子稳定性 (5 seeds × 4 models × 4 horizons = 80 runs) <span class="tag tag-new">P1-3 新增</span></div>
+
+<div class="note">
+  <strong>目的：</strong> 回应 R2 Comment 10 (统计显著性)。所有 CV (变异系数) 均低于 4%，证明结果不依赖运气好的随机种子。
+</div>
+
+<div class="grid-4">
+  <div class="card">
+    <div class="card-title">h=1h RMSE (avg 4 models)</div>
+    <div class="kpi-value" style="color:var(--green)">16.70±0.28</div>
+    <div class="kpi-sub">CV = 1.68% · 极度稳定</div>
+  </div>
+  <div class="card">
+    <div class="card-title">h=6h RMSE (avg 4 models)</div>
+    <div class="kpi-value" style="color:var(--blue)">36.86±0.48</div>
+    <div class="kpi-sub">CV = 1.31%</div>
+  </div>
+  <div class="card">
+    <div class="card-title">h=12h RMSE (avg 4 models)</div>
+    <div class="kpi-value" style="color:var(--yellow)">50.60±1.28</div>
+    <div class="kpi-sub">CV = 2.54%</div>
+  </div>
+  <div class="card">
+    <div class="card-title">h=24h RMSE (avg 4 models)</div>
+    <div class="kpi-value" style="color:var(--yellow)">64.86±2.26</div>
+    <div class="kpi-sub">CV = 3.48% · 可接受</div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:1.25rem">
+  <div class="card-title">LaTeX-ready mean±std table for paper (Model_N, best single-graph)</div>
+  <pre style="font-size:0.78rem; color:var(--muted); margin:0; overflow-x:auto">
+1h:  MAE=9.17±0.30  RMSE=16.63±0.23  IA=0.9899±0.0001
+6h:  MAE=20.58±0.56 RMSE=35.81±0.66  IA=0.9475±0.0018
+12h: MAE=30.51±0.65 RMSE=49.95±1.50  IA=0.8818±0.0144
+24h: MAE=40.97±1.28 RMSE=64.75±2.47  IA=0.7498±0.0265</pre>
+</div>
+
 <!-- ══════════════════════════════════ 跨城市泛化 (Delhi NCT) ══════════════════════════════════ -->
 <hr class="divider">
 <div class="section-title">跨城市泛化实验 — Delhi NCT (新兴经济体验证) <span class="tag tag-new">P2-1 新增</span></div>
