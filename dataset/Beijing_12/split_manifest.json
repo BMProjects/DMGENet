@@ -1,0 +1,32 @@
+{
+  "dataset": "Beijing_12",
+  "split_mode": "absolute_time_split_train_scaler",
+  "train": {
+    "start": "2013-03-01 00:00:00",
+    "end": "2015-07-24 23:00:00"
+  },
+  "val": {
+    "start": "2015-07-25 00:00:00",
+    "end": "2016-05-11 23:00:00"
+  },
+  "test": {
+    "start": "2016-05-12 00:00:00",
+    "end": "2017-02-28 23:00:00"
+  },
+  "features": [
+    "PM2.5",
+    "PM10",
+    "SO2",
+    "NO2",
+    "CO",
+    "O3",
+    "TEMP",
+    "PRES",
+    "DEWP",
+    "RAIN",
+    "WSPM",
+    "WD_deg"
+  ],
+  "seq_len": 72,
+  "pred_lens": [1, 6, 12, 24]
+}

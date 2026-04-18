@@ -1,0 +1,57 @@
+{
+  "dataset": "Beijing_Recent_12",
+  "num_nodes": 12,
+  "site_names": [
+    "1001A",
+    "1002A",
+    "1003A",
+    "1004A",
+    "1005A",
+    "1006A",
+    "1007A",
+    "1008A",
+    "1009A",
+    "1010A",
+    "1011A",
+    "1012A"
+  ],
+  "graph_params": {
+    "D": {
+      "sigma_km": 16.0,
+      "threshold": 0.4,
+      "num_edges": 46
+    },
+    "N": {
+      "radius_km": 45.0,
+      "num_edges": 120
+    },
+    "S": {
+      "sigma": 0.2,
+      "threshold": 0.6,
+      "num_edges": 128
+    },
+    "F": {
+      "source": "osm_poi",
+      "radius_m": 500,
+      "threshold": 0.65,
+      "log_scale": true,
+      "n_dims": 13,
+      "dim_names": [
+        "catering",
+        "scenic_spots",
+        "public_facilities",
+        "companies",
+        "shopping",
+        "transportation",
+        "financial",
+        "science_education",
+        "housing",
+        "life_services",
+        "sports_leisure",
+        "medical",
+        "government"
+      ],
+      "num_edges": 62
+    }
+  }
+}

@@ -28,38 +28,21 @@ def R2(pred, true):
     return r2_score(pred, true)
 
 def R2_new(pred, true):
-    """
-    计算三维数组 [samples, N, T_out] 的每个预测时间步的 R²，
-    与 sklearn.metrics.r2_score 的定义完全一致。
-    返回一个长度为 T_out 的 numpy 数组。
-    """
+    """Per-horizon R^2 for a [samples, N, T_out] array; matches sklearn.r2_score."""
     if pred.ndim != 3 or true.ndim != 3:
-        raise ValueError("输入必须是三维数组 [samples, N, T_out]")
+        raise ValueError("Inputs must be 3-D arrays of shape [samples, N, T_out]")
 
     _, _, T_out = pred.shape
     r2_list = []
-
     for t in range(T_out):
         y_true_t = true[:, :, t].reshape(-1)
         y_pred_t = pred[:, :, t].reshape(-1)
-        r2 = r2_score(y_true_t, y_pred_t)  # 使用 sklearn 原始定义
-        r2_list.append(r2)
-
+        r2_list.append(r2_score(y_true_t, y_pred_t))
     return np.array(r2_list)
 
 
-
 def index_of_agreement(observed, predicted):
-    """
-    计算 Index of Agreement (IA)
-
-    参数:
-    observed (list or array): 观测值（真实值）
-    predicted (list or array): 预测值
-
-    返回:
-    float: IA 值
-    """
+    """Willmott's Index of Agreement (IA). Returns a scalar in (-∞, 1]; 1 is perfect."""
     observed = np.array(observed)
     predicted = np.array(predicted)
 
@@ -88,7 +71,7 @@ def metric_new(pred, true):
 
     return mae, rmse, mape, r2
 
-def metric_mutil_sites(pred, true):
+def metric_multi_sites(pred, true):
     mae = MAE(pred, true)
     rmse = RMSE(pred, true)
     ia = index_of_agreement(true, pred)

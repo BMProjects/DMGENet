@@ -1,0 +1,53 @@
+{
+  "dataset": "Chengdu_10",
+  "num_nodes": 8,
+  "site_names": [
+    "1431A",
+    "1432A",
+    "1433A",
+    "1434A",
+    "1437A",
+    "1438A",
+    "2880A",
+    "3136A"
+  ],
+  "graph_params": {
+    "D": {
+      "sigma_km": 16.0,
+      "threshold": 0.4,
+      "num_edges": 22
+    },
+    "N": {
+      "radius_km": 45.0,
+      "num_edges": 50
+    },
+    "S": {
+      "sigma": 0.2,
+      "threshold": 0.6,
+      "num_edges": 42
+    },
+    "F": {
+      "source": "osm_poi",
+      "radius_m": 500,
+      "threshold": 0.65,
+      "log_scale": true,
+      "n_dims": 13,
+      "dim_names": [
+        "catering",
+        "scenic_spots",
+        "public_facilities",
+        "companies",
+        "shopping",
+        "transportation",
+        "financial",
+        "science_education",
+        "housing",
+        "life_services",
+        "sports_leisure",
+        "medical",
+        "government"
+      ],
+      "num_edges": 30
+    }
+  }
+}

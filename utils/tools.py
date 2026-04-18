@@ -2,7 +2,7 @@ import numpy as np
 import random
 import torch
 import matplotlib
-matplotlib.use('Agg')  # 非交互后端，不弹窗，支持无头服务器
+matplotlib.use('Agg')  # non-interactive backend for headless servers
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 
@@ -39,22 +39,14 @@ def plot_loss(train_loss, val_loss, test_loss, save_path=None):
     plt.close(fig)
 
 
-# def adjust_learning_rate(optimizer, epoch, start_lr):
-#     lr = start_lr * (0.5 ** (epoch // 10))
-#     if epoch % 10 == 0:
-#         print('Updating learning rate to {:.2e}'.format(lr))
-#     for param_group in optimizer.param_groups:
-#         param_group['lr'] = lr
-
 def adjust_learning_rate(optimizer, epoch, start_lr):
+    """Warm-up for 5 epochs, then 0.8x decay per epoch."""
     if epoch < 6:
         lr = start_lr
     else:
         lr = start_lr * (0.8 ** (epoch - 5))
 
-    # print('Epoch [{:<3}/{:<3}], Learning Rate: {:.2e}'.format(epoch, 100, lr))
     print('Learning Rate: {:.2e}'.format(lr), end=" ")
-
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -69,15 +61,16 @@ def adjust_learning_rate_RLMC(optimizer, epoch, start_lr):
 
 
 
-# 定义早停类
 class EarlyStopping:
+    """Save model on val-loss improvement; stop after `patience` non-improvements."""
+
     def __init__(self, patience=7, verbose=False, delta=0, path='checkpoint.pt'):
         """
         Args:
-            patience (int): 允许验证集性能下降的次数
-            verbose (bool): 是否打印早停信息
-            delta (float): 最小性能提升的阈值
-            path (str): 模型保存的路径
+            patience: Number of consecutive non-improving epochs to tolerate.
+            verbose:  Print a message on every counter update.
+            delta:    Minimum improvement in val_loss to count as "better".
+            path:     Checkpoint path for the best model weights.
         """
         self.patience = patience
         self.verbose = verbose
@@ -105,7 +98,7 @@ class EarlyStopping:
             self.counter = 0
 
     def save_checkpoint(self, val_loss, model):
-        """保存当前最佳模型"""
+        """Persist the current best weights to disk."""
         if self.verbose:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
         torch.save(model.state_dict(), self.path)

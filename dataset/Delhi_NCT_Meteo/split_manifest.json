@@ -1,0 +1,32 @@
+{
+  "dataset": "Delhi_NCT_Meteo",
+  "split_mode": "absolute_time_split_train_scaler",
+  "train": {
+    "start": "2017-09-07 11:00:00",
+    "end": "2019-05-16 23:00:00"
+  },
+  "val": {
+    "start": "2019-05-17 00:00:00",
+    "end": "2019-12-08 11:00:00"
+  },
+  "test": {
+    "start": "2019-12-08 12:00:00",
+    "end": "2020-07-01 00:00:00"
+  },
+  "features": [
+    "PM2.5",
+    "PM10",
+    "SO2",
+    "NO2",
+    "CO",
+    "O3",
+    "TEMP",
+    "PRES",
+    "DEWP",
+    "RAIN",
+    "WSPM",
+    "WD_deg"
+  ],
+  "seq_len": 72,
+  "pred_lens": [1, 6, 12, 24]
+}

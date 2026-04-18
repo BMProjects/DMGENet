@@ -1,0 +1,267 @@
+{
+  "source_dataset": "Delhi_NCT",
+  "weather_source": "NOAA ISD-Lite",
+  "weather_history_url": "https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv",
+  "station_time_zone": "Asia/Kolkata",
+  "common_start": "2017-09-07 11:00:00",
+  "common_end": "2020-07-01 00:00:00",
+  "n_stations": 12,
+  "feature_order": [
+    "PM2.5",
+    "PM10",
+    "SO2",
+    "NO2",
+    "CO",
+    "O3",
+    "TEMP",
+    "PRES",
+    "DEWP",
+    "RAIN",
+    "WSPM",
+    "WD_deg"
+  ],
+  "pressure_note": "PRES is mapped from NOAA ISD-Lite SLP (sea-level pressure).",
+  "split_mode": "legacy_6_2_2_window_split",
+  "stations": [
+    {
+      "station_id": "DL031",
+      "station_name": "RK_Puram",
+      "weather_station_id": "421820-99999",
+      "weather_station_name": "SAFDARJUNG",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL021",
+      "station_name": "NSIT_Dwarka",
+      "weather_station_id": "421810-99999",
+      "weather_station_name": "INDIRA GANDHI INTL",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL002",
+      "station_name": "Anand_Vihar",
+      "weather_station_id": "421820-99999",
+      "weather_station_name": "SAFDARJUNG",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL028",
+      "station_name": "Punjabi_Bagh",
+      "weather_station_id": "421810-99999",
+      "weather_station_name": "INDIRA GANDHI INTL",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL019",
+      "station_name": "Mandir_Marg",
+      "weather_station_id": "421820-99999",
+      "weather_station_name": "SAFDARJUNG",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL013",
+      "station_name": "IHBAS_Dilshad_Garden",
+      "weather_station_id": "421820-99999",
+      "weather_station_name": "SAFDARJUNG",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL034",
+      "station_name": "Sirifort",
+      "weather_station_id": "421820-99999",
+      "weather_station_name": "SAFDARJUNG",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL007",
+      "station_name": "CRRI_Mathura_Road",
+      "weather_station_id": "421820-99999",
+      "weather_station_name": "SAFDARJUNG",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL033",
+      "station_name": "Shadipur",
+      "weather_station_id": "421820-99999",
+      "weather_station_name": "SAFDARJUNG",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL012",
+      "station_name": "IGI_Airport_T3",
+      "weather_station_id": "421810-99999",
+      "weather_station_name": "INDIRA GANDHI INTL",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL008",
+      "station_name": "DTU",
+      "weather_station_id": "421810-99999",
+      "weather_station_name": "INDIRA GANDHI INTL",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    },
+    {
+      "station_id": "DL017",
+      "station_name": "Lodhi_Road",
+      "weather_station_id": "421820-99999",
+      "weather_station_name": "SAFDARJUNG",
+      "feature_order": [
+        "PM2.5",
+        "PM10",
+        "SO2",
+        "NO2",
+        "CO",
+        "O3",
+        "TEMP",
+        "PRES",
+        "DEWP",
+        "RAIN",
+        "WSPM",
+        "WD_deg"
+      ]
+    }
+  ]
+}

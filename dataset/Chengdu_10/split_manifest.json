@@ -1,0 +1,47 @@
+{
+  "dataset": "Chengdu_10",
+  "split_mode": "absolute_time_split_train_scaler",
+  "train": {
+    "start": "2020-01-01",
+    "end": "2021-12-31"
+  },
+  "val": {
+    "start": "2022-01-01",
+    "end": "2022-12-31"
+  },
+  "test": {
+    "start": "2023-01-01",
+    "end": "2023-12-31"
+  },
+  "stations": [
+    "1431A",
+    "1432A",
+    "1433A",
+    "1434A",
+    "1437A",
+    "1438A",
+    "2880A",
+    "3136A"
+  ],
+  "features": [
+    "PM2.5",
+    "PM10",
+    "SO2",
+    "NO2",
+    "CO",
+    "O3",
+    "TEMP",
+    "PRES",
+    "DEWP",
+    "RAIN",
+    "WSPM",
+    "WD_deg"
+  ],
+  "seq_len": 72,
+  "pred_lens": [
+    1,
+    6,
+    12,
+    24
+  ]
+}

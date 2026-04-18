@@ -1,0 +1,51 @@
+{
+  "dataset": "Beijing_Recent_12",
+  "split_mode": "absolute_time_split_train_scaler",
+  "train": {
+    "start": "2020-01-01",
+    "end": "2021-12-31"
+  },
+  "val": {
+    "start": "2022-01-01",
+    "end": "2022-12-31"
+  },
+  "test": {
+    "start": "2023-01-01",
+    "end": "2023-12-31"
+  },
+  "stations": [
+    "1001A",
+    "1002A",
+    "1003A",
+    "1004A",
+    "1005A",
+    "1006A",
+    "1007A",
+    "1008A",
+    "1009A",
+    "1010A",
+    "1011A",
+    "1012A"
+  ],
+  "features": [
+    "PM2.5",
+    "PM10",
+    "SO2",
+    "NO2",
+    "CO",
+    "O3",
+    "TEMP",
+    "PRES",
+    "DEWP",
+    "RAIN",
+    "WSPM",
+    "WD_deg"
+  ],
+  "seq_len": 72,
+  "pred_lens": [
+    1,
+    6,
+    12,
+    24
+  ]
+}
