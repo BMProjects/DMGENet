@@ -6,16 +6,13 @@ Unified baseline training and evaluation script.
 This version does not force every method into one simplified tensor format.
 Instead, each baseline uses a local adapter that stays close to its original
 input design:
-  - AGCRN:        PM2.5 only
   - iTransformer: PM2.5 multivariate series + calendar covariates
   - STAEformer:   PM2.5 + TOD + DOW
   - PM2.5-GNN:    PM2.5 history + future exogenous features + transport graph
+  - MSTGAN:       multi-scale graph-temporal modeling
 
-The default paper-aligned benchmark uses:
-  - AGCRN / iTransformer / STAEformer / PM2.5-GNN
-
-MSTGAN and AirFormer are still supported by this runner as extended research
-models, but they are no longer part of the paper-aligned main benchmark.
+Supported baselines:
+  - iTransformer / STAEformer / PM2.5-GNN / MSTGAN
 
 Output directory:
   results/baselines/{model}/{dataset}/72/{horizon}/
@@ -57,18 +54,6 @@ if torch.cuda.is_available():
     torch.set_float32_matmul_precision("high")
 
 BASE_PRESETS = {
-    "agcrn": {
-        "epochs": 60,
-        "lr": 3e-3,
-        "weight_decay": 0.0,
-        "batch_size": 64,
-        "patience": 8,
-        "criterion": "mae",
-        "hidden_dim": 64,
-        "embed_dim": 2,
-        "cheb_k": 2,
-        "n_layers": 2,
-    },
     "itransformer": {
         "epochs": 20,
         "lr": 1e-4,
@@ -124,30 +109,6 @@ BASE_PRESETS = {
         "d_model": 512,
         "dropout": 0.1,
     },
-    "airformer": {
-        # Aligned with official experiments/airformer/main.py + stochastic trainer:
-        #   base_lr=5e-4, lr_decay_ratio=0.5, MultiStepLR milestones (scaled to ~100 epochs),
-        #   batch_size=16, max_grad_norm=5.0, stochastic_flag=True, spatial_flag=True,
-        #   loss = MAE(pred,y) + alpha * (MAE(x_rec[:6], x[:6]) + kl_loss), alpha=1.
-        # Reduced max_epochs to fit the local benchmark budget after convergence analysis.
-        "epochs": 70,
-        "lr": 5e-4,
-        "weight_decay": 0.0,
-        "batch_size": 16,
-        "patience": 8,
-        "criterion": "mae",
-        "hidden_channels": 32,
-        "end_channels": 256,     # Official setting: end_channels = n_hidden * 8 = 256
-        "af_blocks": 4,
-        "mlp_expansion": 2,
-        "af_num_heads": 2,
-        "dropout": 0.3,
-        "spatial_flag": True,
-        "stochastic_flag": True,
-        "kl_weight": 1.0,
-        "rec_weight": 1.0,
-        "lr_decay_ratio": 0.5,
-    },
 }
 
 
@@ -180,21 +141,17 @@ def get_model_presets(model_name: str, hardware: dict) -> dict:
     if hardware["device"] == "cuda":
         if hardware["is_4090_class"]:
             tuned_batch = {
-                "agcrn": 768,
                 "itransformer": 192,
                 "staeformer": 48,
                 "pm25_gnn": 256,
                 "mstgan": 64,
-                "airformer": 64,
             }
         else:
             tuned_batch = {
-                "agcrn": 128,
                 "itransformer": 64,
                 "staeformer": 32,
                 "pm25_gnn": 64,
                 "mstgan": 32,
-                "airformer": 32,
             }
         preset["batch_size"] = tuned_batch[model_name]
     return preset
@@ -206,12 +163,10 @@ def default_loader_settings(model_name: str, hardware: dict) -> tuple[int, int]:
         return 0, 2
     if hardware["is_4090_class"]:
         tuned = {
-            "agcrn": (10, 2),
             "itransformer": (10, 4),
             "staeformer": (8, 2),
             "pm25_gnn": (8, 2),
             "mstgan": (6, 2),
-            "airformer": (8, 2),
         }
         return tuned[model_name]
     return max(4, min(8, cpu_count - 1)), 2
@@ -246,20 +201,6 @@ def autocast_context(amp_dtype):
 def build_model(model_name: str, info: dict, horizon: int, args) -> nn.Module:
     n_nodes = info["n_nodes"]
     seq_len = info["seq_len"]
-
-    if model_name == "agcrn":
-        from baselines.agcrn.model import AGCRN
-
-        return AGCRN(
-            n_nodes=n_nodes,
-            input_dim=1,
-            output_dim=1,
-            hidden_dim=args.hidden_dim,
-            embed_dim=args.embed_dim,
-            cheb_k=args.cheb_k,
-            pred_len=horizon,
-            n_layers=args.n_layers,
-        )
 
     if model_name == "itransformer":
         from baselines.itransformer.model import iTransformer
@@ -337,26 +278,6 @@ def build_model(model_name: str, info: dict, horizon: int, args) -> nn.Module:
             output_dim=1,
         )
 
-    if model_name == "airformer":
-        from baselines.airformer.model import AirFormer
-
-        return AirFormer(
-            num_nodes=n_nodes,
-            seq_len=seq_len,
-            horizon=horizon,
-            input_dim=args.airformer_input_dim,
-            output_dim=1,
-            hidden_channels=args.hidden_channels,
-            end_channels=args.end_channels,
-            blocks=args.af_blocks,
-            mlp_expansion=args.mlp_expansion,
-            num_heads=args.af_num_heads,
-            dropout=args.dropout,
-            spatial_flag=args.spatial_flag,
-            stochastic_flag=args.stochastic_flag,
-            num_sectors=args.dartboard_num_sectors,
-        )
-
     raise ValueError(f"Unknown model: {model_name}")
 
 
@@ -371,12 +292,6 @@ def get_criterion(name: str) -> nn.Module:
 
 
 def forward_model(model_name: str, model: nn.Module, batch: dict, device: str) -> tuple[torch.Tensor, torch.Tensor]:
-    if model_name == "agcrn":
-        x = move_tensor(batch["x"], device)
-        y = move_tensor(batch["y"], device)  # (B,N,H)
-        pred = model(x)
-        return pred, y
-
     if model_name == "itransformer":
         x_enc = move_tensor(batch["x_enc"], device)
         x_mark_enc = move_tensor(batch["x_mark_enc"], device)
@@ -404,64 +319,13 @@ def forward_model(model_name: str, model: nn.Module, batch: dict, device: str) -
         pred = model(x, model._cheb_polys)               # (B,N,H)
         return pred, y
 
-    if model_name == "airformer":
-        x = move_tensor(batch["x"], device)              # (B,T,N,C)
-        y = move_tensor(batch["y"], device)              # (B,N,H)
-        pred, aux = model(x)                             # pred (B,N,H), aux dict
-        model._last_aux = aux
-        model._last_x = x                                # for reconstruction loss
-        return pred, y
-
     raise ValueError(f"Unknown model: {model_name}")
 
 
 def build_scheduler(model_name: str, optimizer: torch.optim.Optimizer, args=None):
     if model_name == "staeformer":
         return torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20, 30], gamma=0.1)
-    if model_name == "airformer":
-        # The official milestones [3, 6, 9] were designed for ~250 epochs.
-        # Here they are rescaled to [20, 40, 60] to preserve a similar decay pattern.
-        gamma = getattr(args, "lr_decay_ratio", 0.5) if args is not None else 0.5
-        return torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20, 40, 60], gamma=gamma)
     return None
-
-
-def airformer_augmented_loss(
-    pred: torch.Tensor,
-    target: torch.Tensor,
-    model: nn.Module,
-    criterion: nn.Module,
-    args,
-) -> tuple[torch.Tensor, dict]:
-    """
-    Reproduce the official airformer_stochastic_trainer loss:
-        loss = pred_loss + alpha * (rec_loss + kl_loss)
-    where rec_loss is MAE on the first `rec_channels` of the input (air quality attributes).
-    alpha is implemented here via `kl_weight` and `rec_weight`, both 1.0 by default.
-    """
-    pred_loss = criterion(pred, target)
-    parts = {"pred_loss": pred_loss.detach()}
-    total = pred_loss
-
-    aux = getattr(model, "_last_aux", None)
-    if aux is None:
-        return total, parts
-
-    kl = aux.get("kl_loss")
-    x_rec = aux.get("x_rec")
-    x_in = getattr(model, "_last_x", None)
-
-    if kl is not None:
-        total = total + args.kl_weight * kl
-        parts["kl_loss"] = kl.detach()
-
-    if x_rec is not None and x_in is not None:
-        C = min(args.airformer_rec_channels, x_in.size(-1), x_rec.size(-1))
-        rec_loss = (x_rec[..., :C] - x_in[..., :C]).abs().mean()
-        total = total + args.rec_weight * rec_loss
-        parts["rec_loss"] = rec_loss.detach()
-
-    return total, parts
 
 
 def train_one_horizon(model_name: str, dataset: str, horizon: int, args, out_dir: Path):
@@ -490,12 +354,6 @@ def train_one_horizon(model_name: str, dataset: str, horizon: int, args, out_dir
         args.edge_attr = data_meta.edge_attr
         args.use_wind = bool(data_meta.use_wind)
         args.mstgan_input_dim = data_meta.mstgan_input_dim
-        args.dartboard_num_sectors = data_meta.dartboard_num_sectors or 17
-        args.airformer_input_dim = data_meta.airformer_input_dim or 1
-        args.airformer_rec_channels = data_meta.airformer_rec_channels or args.airformer_input_dim
-        if model_name == "airformer" and data_meta.dartboard_radii_km is not None:
-            r_in, r_out = data_meta.dartboard_radii_km
-            print(f"  Dartboard radii (km): inner={r_in:.2f}  outer={r_out:.2f}  sectors={args.dartboard_num_sectors}")
         if data_meta.use_wind:
             feature_mean_flat = np.asarray(data_meta.feature_mean).reshape(-1)
             feature_std_flat = np.asarray(data_meta.feature_std).reshape(-1)
@@ -517,10 +375,6 @@ def train_one_horizon(model_name: str, dataset: str, horizon: int, args, out_dir
             model._cheb_polys = [
                 torch.from_numpy(p).float().to(DEVICE) for p in data_meta.cheb_polynomials
             ]
-        if model_name == "airformer":
-            assignment = torch.from_numpy(data_meta.dartboard_assignment).float().to(DEVICE)
-            mask = torch.from_numpy(data_meta.dartboard_mask).bool().to(DEVICE)
-            model.set_dartboard_tensors(assignment, mask)
 
         n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         print(f"  Model params: {n_params:,}")
@@ -539,24 +393,15 @@ def train_one_horizon(model_name: str, dataset: str, horizon: int, args, out_dir
         log_rows = []
         t0 = time.time()
 
-        af_extra_log = []
-
         for epoch in range(1, args.epochs + 1):
             model.train()
             train_loss = []
-            af_epoch_parts: dict[str, list] = {"pred_loss": [], "kl_loss": [], "rec_loss": []}
             t_ep = time.time()
             for batch in train_loader:
                 optimizer.zero_grad(set_to_none=True)
                 with autocast_context(amp_dtype):
                     pred, target = forward_model(model_name, model, batch, DEVICE)
-                    if model_name == "airformer":
-                        loss, parts = airformer_augmented_loss(pred, target, model, criterion, args)
-                        for k in af_epoch_parts:
-                            if k in parts:
-                                af_epoch_parts[k].append(float(parts[k].item()))
-                    else:
-                        loss = criterion(pred, target)
+                    loss = criterion(pred, target)
                 if scaler.is_enabled():
                     scaler.scale(loss).backward()
                     scaler.unscale_(optimizer)
@@ -575,8 +420,6 @@ def train_one_horizon(model_name: str, dataset: str, horizon: int, args, out_dir
                 for batch in val_loader:
                     with autocast_context(amp_dtype):
                         pred, target = forward_model(model_name, model, batch, DEVICE)
-                        # Validation tracks only the prediction criterion — consistent with
-                        # official AirFormer trainer which evaluates masked MAE on pred.
                         val_loss.append(criterion(pred, target).item())
 
             ep_train = float(np.mean(train_loss))
@@ -586,13 +429,7 @@ def train_one_horizon(model_name: str, dataset: str, horizon: int, args, out_dir
                 scheduler.step()
 
             row = {"epoch": epoch, "train_loss": ep_train, "val_loss": ep_val, "epoch_time": ep_time}
-            suffix = ""
-            if model_name == "airformer":
-                for k in ("pred_loss", "kl_loss", "rec_loss"):
-                    if af_epoch_parts[k]:
-                        row[f"af_{k}"] = float(np.mean(af_epoch_parts[k]))
-                        suffix += f"  {k}:{row[f'af_{k}']:.4f}"
-            print(f"  Epoch [{epoch:3d}/{args.epochs}]  {ep_time:.1f}s  train:{ep_train:.5f}  val:{ep_val:.5f}{suffix}")
+            print(f"  Epoch [{epoch:3d}/{args.epochs}]  {ep_time:.1f}s  train:{ep_train:.5f}  val:{ep_val:.5f}")
             log_rows.append(row)
 
             early_stop(ep_val, model)
@@ -664,7 +501,7 @@ def parse_args():
     p.add_argument(
         "--model",
         required=True,
-        choices=["agcrn", "itransformer", "staeformer", "pm25_gnn", "mstgan", "airformer"],
+        choices=["itransformer", "staeformer", "pm25_gnn", "mstgan"],
     )
     p.add_argument("--dataset", required=True)
     p.add_argument("--horizon", nargs="+", type=int, default=[1, 6, 12, 24])
@@ -688,12 +525,6 @@ def parse_args():
     p.add_argument("--dropout", type=float, default=None)
     p.add_argument("--n-heads", type=int, default=None)
 
-    # AGCRN
-    p.add_argument("--hidden-dim", type=int, default=None)
-    p.add_argument("--embed-dim", type=int, default=None)
-    p.add_argument("--cheb-k", type=int, default=None)
-    p.add_argument("--gnn-out", type=int, default=None)
-
     # iTransformer
     p.add_argument("--d-model", type=int, default=None)
     p.add_argument("--d-ff", type=int, default=None)
@@ -709,19 +540,11 @@ def parse_args():
     p.add_argument("--use-mixed-proj", type=lambda x: str(x).lower() in {"1", "true", "yes"}, default=None)
 
     # MSTGAN
+    p.add_argument("--hidden-dim", type=int, default=None)
+    p.add_argument("--cheb-k", type=int, default=None)
+    p.add_argument("--gnn-out", type=int, default=None)
     p.add_argument("--block1-hidden", type=int, default=None)
     p.add_argument("--block2-hidden", type=int, default=None)
-
-    # AirFormer
-    p.add_argument("--hidden-channels", type=int, default=None)
-    p.add_argument("--end-channels", type=int, default=None)
-    p.add_argument("--af-blocks", type=int, default=None)
-    p.add_argument("--mlp-expansion", type=int, default=None)
-    p.add_argument("--af-num-heads", type=int, default=None)
-    p.add_argument("--spatial-flag", type=lambda x: str(x).lower() in {"1", "true", "yes"}, default=None)
-    p.add_argument("--stochastic-flag", type=lambda x: str(x).lower() in {"1", "true", "yes"}, default=None)
-    p.add_argument("--kl-weight", type=float, default=None)
-    p.add_argument("--rec-weight", type=float, default=None)
 
     args = p.parse_args()
     hardware = get_runtime_hardware()

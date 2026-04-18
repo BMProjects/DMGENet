@@ -10,7 +10,6 @@ Goals:
 3. Keep all datasets comparable under the same train/validation/test protocol.
 
 Currently supported:
-  - AGCRN:        PM2.5 only, x shape (B, T, N, 1)
   - iTransformer: PM2.5 multivariate series + calendar covariates
                   x_enc  shape (B, T, N)
                   x_mark shape (B, T, 4) = [month, day, weekday, hour] (normalized)
@@ -19,13 +18,13 @@ Currently supported:
   - PM2.5-GNN:    official-style local adaptation
                   pm25_hist shape (B, T, N, 1)
                   feature   shape (B, T+H, N, F_exog)
+  - MSTGAN:       6-channel air-quality tensor, x shape (B, N, 6, T)
 
 Notes:
   - Chinese-city datasets recover the absolute-time split from
     `split_manifest.json`.
-  - Delhi_NCT keeps its legacy 6:2:2 window split, so time covariates are
-    reconstructed by first generating the full window stream from the
-    continuous AQI_processed timeline and then slicing by sample count.
+  - Delhi_NCT_Meteo also uses a chronological date split defined in
+    `split_manifest.json`.
 """
 
 from __future__ import annotations
@@ -43,19 +42,16 @@ from data.compact_dataset import ensure_prepared_splits, find_panel_paths
 
 ROOT = Path(__file__).resolve().parent.parent
 
-MODEL_NAMES = {"agcrn", "itransformer", "staeformer", "pm25_gnn", "mstgan", "airformer"}
+MODEL_NAMES = {"itransformer", "staeformer", "pm25_gnn", "mstgan"}
 DELHI_DATASET = "Delhi_NCT_Meteo"
 
-# Fixed input-feature protocol for MSTGAN and AirFormer.
+# Fixed input-feature protocol for MSTGAN.
 # Within this repository the NPZ feature order is fixed as follows:
 #   CN cities: [PM2.5, PM10, SO2, NO2, CO, O3, TEMP, PRES, DEWP, RAIN, WSPM, WD_deg]
 #   Delhi:     [PM2.5, PM10, SO2, NO2, CO, O3, NO, NOx, NH3, Benzene, Toluene, Xylene]
 # The first six channels always represent the same air-quality attributes.
-# This matches AirFormer's stochastic reconstruction logic (`X_rec[..., :6]`)
-# and also matches MSTGAN's original six-feature Beijing setup.
+# This matches MSTGAN's original six-feature Beijing setup.
 MSTGAN_AIR_QUALITY_IDX = (0, 1, 2, 3, 4, 5)   # PM2.5 / PM10 / SO2 / NO2 / CO / O3
-AIRFORMER_FEATURE_COUNT = 12                   # full continuous exogenous set
-AIRFORMER_REC_CHANNELS = 6                     # reconstruct only first 6 (air quality)
 
 
 def _load_npz(dataset: str, horizon: int, split: str) -> tuple[np.ndarray, np.ndarray]:
@@ -351,12 +347,7 @@ class OfficialBaselineDataset(Dataset):
         start_times = _infer_split_start_times(dataset, split, horizon, B, T)
         marks_norm, tod, dow = _build_time_window_features(start_times, T)
 
-        if model_name == "agcrn":
-            # Official AGCRN defaults to input_dim=1, so we keep PM2.5 only.
-            self.inputs = {"x": pm}
-            self.targets = targets
-
-        elif model_name == "itransformer":
+        if model_name == "itransformer":
             # Official iTransformer expects a multivariate target series plus x_mark.
             # We use PM2.5 from all N stations as the multivariate series.
             self.inputs = {
@@ -380,17 +371,6 @@ class OfficialBaselineDataset(Dataset):
             subset = X_raw[..., list(MSTGAN_AIR_QUALITY_IDX)]   # (B,N,T,6)
             x = subset.transpose(0, 1, 3, 2).astype(np.float32)  # (B,N,6,T)
             self.inputs = {"x": x}
-            self.targets = targets              # (B,N,H)
-
-        elif model_name == "airformer":
-            # Official AirFormer input is (B, T, N, C), with main.py defaulting
-            # to input_dim=27 (11 continuous + 16 embedded features). We do not
-            # reproduce the categorical embedding branch here; instead we use the
-            # 12 continuous features stored in the project NPZ files:
-            #   first 6  = air-quality variables
-            #   last 6   = meteorological / auxiliary variables
-            feature_subset = X_btnf[..., :AIRFORMER_FEATURE_COUNT].astype(np.float32)
-            self.inputs = {"x": feature_subset}  # (B,T,N,12)
             self.targets = targets              # (B,N,H)
 
         self.n_samples = B
@@ -425,13 +405,6 @@ class BaselineMeta:
     # MSTGAN: Chebyshev polynomials from distance adjacency, each (N, N)
     cheb_polynomials: list[np.ndarray] | None = None
     mstgan_input_dim: int | None = None
-    # AirFormer: dartboard tensors + multivariate input dim
-    dartboard_assignment: np.ndarray | None = None
-    dartboard_mask: np.ndarray | None = None
-    dartboard_num_sectors: int | None = None
-    dartboard_radii_km: tuple[float, float] | None = None
-    airformer_input_dim: int | None = None
-    airformer_rec_channels: int | None = None
 
 
 class PM25GNNDataset(Dataset):
@@ -622,47 +595,6 @@ def _build_mstgan_meta(dataset: str, horizon: int, K: int = 3) -> dict:
     return {"cheb_polynomials": polys}
 
 
-def _build_airformer_meta(dataset: str) -> dict:
-    """
-    Build dartboard assignment/mask for AirFormer.
-
-    Rule (local adaptation, documented in baselines/airformer/model.py):
-      Official AirFormer uses fixed (50, 200) km ring radii at a nationwide
-      scale. On compact city-level station networks, that leaves many sectors
-      empty and causes DS-MSA to degenerate. Here we adapt the rings by the
-      network's maximum pairwise station distance:
-          r_inner = 0.15 * max_pairwise_distance
-          r_outer = 0.45 * max_pairwise_distance
-      8 angular sectors, num_sectors = 1 (self) + 2*8 + 1 (far) = 18.
-      This keeps the "ring + sector" design from the paper while avoiding the
-      earlier piecewise hard-coded radii, and it works across all supported
-      datasets.
-    """
-    from baselines.airformer.model import build_dartboard
-
-    location = _load_location_frame(dataset)
-    lat_col = "Latitude" if "Latitude" in location.columns else "latitude"
-    lon_col = "Longitude" if "Longitude" in location.columns else "longitude"
-    coords = location[[lat_col, lon_col]].to_numpy(dtype=np.float32)
-
-    n = len(coords)
-    max_dist = 0.0
-    for i in range(n):
-        for j in range(i + 1, n):
-            d = _haversine_km(coords[i, 0], coords[i, 1], coords[j, 0], coords[j, 1])
-            max_dist = max(max_dist, d)
-    max_dist = max(max_dist, 1.0)  # avoid zero-radius degeneration
-    radii = (0.15 * max_dist, 0.45 * max_dist)
-    assignment, mask, num_sectors = build_dartboard(coords, radii_km=radii, num_angles=8)
-    return {
-        "dartboard_assignment": assignment,
-        "dartboard_mask": mask,
-        "dartboard_num_sectors": num_sectors,
-        "dartboard_radii_km": radii,
-        "dartboard_max_dist_km": max_dist,
-    }
-
-
 def get_dataloaders(
     model_name: str,
     dataset: str,
@@ -715,13 +647,5 @@ def get_dataloaders(
         # OfficialBaselineDataset: 6 air-quality channels.
         meta.mstgan_input_dim = len(MSTGAN_AIR_QUALITY_IDX)
         meta.cheb_polynomials = _build_mstgan_meta(dataset, horizon, K=3)["cheb_polynomials"]
-    elif model_name == "airformer":
-        ab = _build_airformer_meta(dataset)
-        meta.dartboard_assignment = ab["dartboard_assignment"]
-        meta.dartboard_mask = ab["dartboard_mask"]
-        meta.dartboard_num_sectors = ab["dartboard_num_sectors"]
-        meta.dartboard_radii_km = ab["dartboard_radii_km"]
-        meta.airformer_input_dim = AIRFORMER_FEATURE_COUNT
-        meta.airformer_rec_channels = AIRFORMER_REC_CHANNELS
 
     return (*loaders, meta)

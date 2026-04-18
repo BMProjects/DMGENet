@@ -1,19 +1,15 @@
 # Pipelines
 
-This directory contains the public-facing experiment entrypoints.
-
-The scripts here are intended to orchestrate the paper-aligned workflow rather
-than to preserve historical experiment branches.
+This directory contains the end-to-end experiment entry scripts.
 
 ## Main entrypoint
 
 - `run_unified_pipeline.sh`
-  End-to-end orchestration for the current unified protocol:
-  local split preparation from compact station panels, graph construction, DMGENet base-model
-  training, RL input preparation, and graph-level integration.
+  End-to-end orchestration for dataset split preparation, graph construction,
+  DMGENet base-model training, RL input preparation, and graph-level integration.
 
 At the moment this repository exposes a single public orchestration script:
 
 - `run_unified_pipeline.sh`
 
-If you are automating reproduction or building a clean benchmark run, start there.
+Start there to reproduce the full DMGENet workflow.

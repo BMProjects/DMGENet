@@ -44,7 +44,7 @@ STATIONS = [
     "Shunyi",       "Tiantan",   "Wanliu",   "Wanshouxigong",
 ]
 
-# Feature layout (11 raw + 1 derived wind-direction = 12 dims, same as the paper).
+# Feature layout: 11 raw columns + 1 derived wind-direction = 12 dims.
 POLLUTANTS = ["PM2.5", "PM10", "SO2", "NO2", "CO", "O3"]
 METEO      = ["TEMP", "PRES", "DEWP", "RAIN", "WSPM"]
 # Raw data has no numeric wind-direction column, only `wd` (compass string).
@@ -147,7 +147,7 @@ def load_and_clean(csv_files):
             continue
 
         df = station_dfs[matched].reindex(time_idx)
-        # Paper §5.2: linear interpolation for missing hourly values.
+        # Linear interpolation for missing hourly values.
         df[feature_cols] = df[feature_cols].interpolate(method="linear", limit_direction="both")
         df[feature_cols] = df[feature_cols].ffill().bfill()
         all_data[stn] = df[feature_cols]
@@ -208,7 +208,7 @@ def create_sliding_window_dataset(all_data, feature_cols, seq_len, pred_len, tar
     y = np.array(y_list, dtype=np.float32)
     print(f"Windows: X={X.shape}, y={y.shape}")
 
-    # Paper §5.1: 6/2/2 chronological split.
+    # 6/2/2 chronological split.
     n = len(X)
     n_train = int(n * 0.6)
     n_val   = int(n * 0.2)
@@ -253,8 +253,7 @@ def main():
     save_aqi_processed(all_data)
 
     print("\n" + "=" * 60 + "\n[4/4] Build sliding-window splits\n" + "=" * 60)
-    # The trained models use seq_len=72 hours (not 24 as the paper claims).
-    # This discrepancy is preserved to match the reported experimental results.
+    # Input length is 72 hours (matches the unified benchmark protocol).
     seq_len = 72
     for pred_len in [1, 3, 6, 12, 24]:
         print(f"\n--- seq_len={seq_len}, pred_len={pred_len} ---")

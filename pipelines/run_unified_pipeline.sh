@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # pipelines/run_unified_pipeline.sh
-# Paper-aligned end-to-end experiment pipeline for the current DMGENet release.
+# End-to-end experiment pipeline for the DMGENet release.
 # =============================================================================
 # Protocol summary:
 #   - local NPZ split generation from compact station panels

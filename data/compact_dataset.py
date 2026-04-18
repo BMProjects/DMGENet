@@ -97,9 +97,7 @@ def _safe_fill_frame(df: pd.DataFrame) -> pd.DataFrame:
 
 def _impute_missing_split(df_station: pd.DataFrame, interp_limit_short: int = 6) -> pd.DataFrame:
     """
-    Station-wise imputation used by the CN-city paper protocol.
-
-    This follows the paper-aligned builder closely:
+    Station-wise imputation for the CN-city datasets:
     - local linear interpolation for short gaps,
     - same-month same-hour fallback afterwards.
     """
@@ -272,7 +270,7 @@ def ensure_prepared_splits(dataset: str, horizons: Iterable[int] | None = None, 
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build paper NPZ splits from compact AQI_processed station panels")
+    parser = argparse.ArgumentParser(description="Build NPZ splits from compact AQI_processed station panels")
     parser.add_argument("--dataset", nargs="+", required=True, help="Dataset name(s) or the keyword 'all'")
     parser.add_argument("--pred-lens", nargs="+", type=int, default=None, help="Subset of horizons to build")
     parser.add_argument("--seq-len", type=int, default=72)
