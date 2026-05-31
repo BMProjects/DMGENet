@@ -6,6 +6,12 @@ similarity (`S`), and functional similarity (`F`) — and dynamically combining
 the four graph-wise predictions through a reinforcement-learning integrator
 (RLMC).
 
+![DMGENet dynamic multi-graph overview](assets/readme_overview.webp)
+
+The animation above uses a representative high-pollution interval from
+`Beijing_12` to show how PM2.5 varies across stations while the four graph
+views provide complementary station-relation structures.
+
 ## Datasets
 
 Four datasets are supported:
@@ -134,5 +140,10 @@ transformed predictions, and the full run configuration.
 If you use this repository, please cite the associated paper.
 
 ```text
-[Citation information would be added after published.]
+A Reinforcement Learning-Based Spatiotemporal Dynamic Multi-Graph Ensemble
+Framework for Multi-Station Air Quality Prediction.
+Accepted by Engineering Applications of Artificial Intelligence (EAAI).
+
+Full bibliographic metadata will be added after the DOI, volume, issue, and
+page/article number are assigned.
 ```
